@@ -1,10 +1,10 @@
 import win.ui;
 /*DSG{{*/
-mainForm = ..win.form(text="奇数长度图片检测器 ver1.0  By wolforce 2015-1-15";right=599;bottom=399)
+mainForm = ..win.form(text="奇数长度图片检测器 ver1.0  By wolforce 2015-1-15";right=599;bottom=399;acceptfiles=1)
 mainForm.add(
 buttonStart={cls="button";text="开始检测";left=385;top=42;right=564;bottom=85;z=3};
 editOutPut={cls="edit";left=14;top=167;right=585;bottom=383;db=1;dl=1;dr=1;dt=1;edge=1;multiline=1;z=1};
-editPath={cls="edit";text="请拖拽存放图片的文件夹到这里...";left=37;top=42;right=357;bottom=85;acceptfiles=1;edge=1;multiline=1;z=2}
+editPath={cls="edit";text="请拖拽存放图片的文件夹到界面中...";left=37;top=42;right=357;bottom=85;edge=1;multiline=1;z=2}
 )
 /*}}*/
 
@@ -32,7 +32,7 @@ hook.proc = function(msg,vkcode,scancode,injected,flags,timeStamp,extraInfo){
 }
 
 //拖拽文件夹
-mainForm.editPath.wndproc = function(hwnd,message,wParam,lParam){
+mainForm.wndproc = function(hwnd,message,wParam,lParam){
 	select(message) { 
 		case 0x233/*_WM_DROPFILES*/{ 
 			var fileList = win.getDropFile(wParam);

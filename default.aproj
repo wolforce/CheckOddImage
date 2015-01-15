@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="gb2312"?>
-<project ver="6" name="CheckOddImage" libEmbed="true" icon="res\Images\icon.ico" ui="win" output="CheckOddImage.exe" CompanyName="WSL" FileDescription="CheckOddImage" LegalCopyright="Copyright (C) wolforce 2015" ProductName="CheckOddImage" InternalName="CheckOddImage" FileVersion="0.0.0.04" ProductVersion="1.0.0.04" publishDir="/Publish/">
+<project ver="6" name="CheckOddImage" libEmbed="true" icon="res\Images\icon.ico" ui="win" output="CheckOddImage.exe" CompanyName="WSL" FileDescription="CheckOddImage" LegalCopyright="Copyright (C) wolforce 2015" ProductName="CheckOddImage" InternalName="CheckOddImage" FileVersion="0.0.0.05" ProductVersion="1.0.0.05" publishDir="/Publish/">
 	<file name="main.aau" path="default.main.aau" comment="default.main.aau"/>
 	<folder name="资源文件" path="res" embed="true">
 		<folder name="Images" path="res\Images" comment="res\Images" embed="false">
