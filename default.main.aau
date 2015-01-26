@@ -1,10 +1,9 @@
 import win.ui;
 /*DSG{{*/
-mainForm = ..win.form(text="奇数长度图片检测器 ver1.0  By wolforce 2015-1-15";right=599;bottom=399;acceptfiles=1)
+mainForm = ..win.form(text="奇数长度图片检测器 ver1.2  By wolforce 2015-01-26";right=910;bottom=620;acceptfiles=1;border="dialog frame";max=false;mode="popup")
 mainForm.add(
-buttonStart={cls="button";text="开始检测";left=385;top=42;right=564;bottom=85;z=3};
-editOutPut={cls="edit";left=14;top=167;right=585;bottom=383;db=1;dl=1;dr=1;dt=1;edge=1;multiline=1;z=1};
-editPath={cls="edit";text="请拖拽存放图片的文件夹到界面中...";left=37;top=42;right=357;bottom=85;edge=1;multiline=1;z=2}
+editOutPut={cls="edit";left=473;top=34;right=871;bottom=590;db=1;dl=1;dr=1;dt=1;edge=1;multiline=1;vscroll=1;z=1};
+editPath={cls="edit";text="请拖拽存放图片或文件夹到界面中...";left=36;top=34;right=434;bottom=590;edge=1;multiline=1;vscroll=1;z=2}
 )
 /*}}*/
 
@@ -25,63 +24,104 @@ hook.proc = function(msg,vkcode,scancode,injected,flags,timeStamp,extraInfo){
     	}
     	case 0x101/*_WM_KEYUP*/,0x105/*_WM_SYSKEYUP*/{
     	    io.print("弹起",kn)
-    	}  
-    }   
-    
-	
+    	}
+    }
 }
+
+
+//检测是否是图片文件
+var isPicFile = function(filename){
+	var flag = false;
+	if(string.endWith(filename, ".jpg") || string.endWith(filename, ".png") || string.endWith(filename, ".bmp")) flag = true;
+	return flag;
+}
+
+
+//开始检测
+var scanFunc = function(fileList){
+	if (table.count(fileList) <= 0) {
+		//mainForm.msgbox("请指定图片或存放图片的文件夹", "提示");
+		return;
+	}
+	
+	//批量处理文件
+	var finalFileList = {};
+	var oddFileList = {};
+    var outStr = "";
+    var totalFileCount = 0;
+    var oddFileCount = 0;
+    
+    //处理文件的回调
+    var scanInner = function(filename, fullpath){
+    	if (isPicFile(filename) == false) return;
+        totalFileCount = totalFileCount + 1;
+        var img = gdip.image(fullpath);
+        if (img.width % 2 != 0 || img.height % 2 != 0) {
+            outStr = outStr + fullpath + '\r\n';
+            oddFileCount = oddFileCount + 1;
+        }
+		img.dispose();
+    }
+    
+    //遍历拖拽进来的文件和目录列表
+	for(i=1;#fileList;1){
+		var path = fileList[i];
+		//处理文件
+		if (fsys.isDir(path) == false) {
+			scanInner(path, path);
+			continue;
+		}
+		//处理目录
+    	fsys.enum(  path, //指定要遍历的目录
+                	"*.*", //指定查询文件名，支持windows掩码
+                	function(dir,filename,fullpath,findData){ //指定触发器
+                    	if(filename){
+                    		scanInner(filename, fullpath);
+                        	io.print("发现文件：",fullpath )
+                    	}
+                    	else{
+                        	io.print("发现目录：",dir)
+                    	}
+                	}
+            	);
+	}
+    var preStr = "";
+    if (oddFileCount == 0) preStr = "扫描 " + totalFileCount + " 张图片，没有发现边长为奇数的图片" + '\r\n';
+    else preStr = "扫描 " + totalFileCount + " 张图片，边长为奇数的图片有 " + oddFileCount + " 张:" + '\r\n';
+	outStr = preStr + outStr;
+    mainForm.editOutPut.text = outStr;
+}
+
 
 //拖拽文件夹
 mainForm.wndproc = function(hwnd,message,wParam,lParam){
 	select(message) { 
 		case 0x233/*_WM_DROPFILES*/{ 
+			var finalFileList = {};
 			var fileList = win.getDropFile(wParam);
 			for(i=1;#fileList;1){
 				var filepath = fileList[i];
-				if (string.len(filepath) > 0 && fsys.isDir(filepath)) {
-					mainForm.editPath.text = filepath;
-					break;
+				if (string.len(filepath) > 0) {
+					var flag = false;
+					if (fsys.isDir(filepath)) flag = true;
+					else {
+						var fileInfoArr = string.split(filepath, "\");
+						var filename = fileInfoArr[table.count(fileInfoArr)];
+						if (isPicFile(filename)) flag = true;
+					}
+					if (flag) table.push(finalFileList, filepath);
 				}
 			}
+			var outStr = "";
+			for(i=1;#finalFileList;1){
+				outStr = outStr + finalFileList[i] + '\r\n';
+			}
+			
+			mainForm.editPath.text = outStr;
+			mainForm.editOutPut.text = "";
+			scanFunc(finalFileList);
 		}
 	}
-}
-
-//开始检测
-mainForm.buttonStart.oncommand = function(id,event){
-	var path = mainForm.editPath.text;
-	if (path == "请拖拽存放图片的文件夹到这里..." || path == "") {
-		mainForm.msgbox("请指定存放图片的文件夹", "提示");
-		return;
-	}
-	
-    //批量处理文件
-    var outStr = "";
-    var totalFileCount = 0;
-    var oddFileCount = 0;
-    fsys.enum(  path, //指定要遍历的目录
-                "*.*", //指定查询文件名，支持windows掩码
-                function(dir,filename,fullpath,findData){ //指定触发器
-                	if (filename == null) return; 
-                	if((string.endWith(filename, ".jpg") || string.endWith(filename, ".png") || string.endWith(filename, ".bmp")) == false) return;
-                    if(filename){ 
-                    	totalFileCount = totalFileCount + 1;
-                    	var img = gdip.image(fullpath);
-                    	if (img.width % 2 != 0 || img.height % 2 != 0) {
-                    		outStr = outStr + fullpath + '\r\n';
-                    		oddFileCount = oddFileCount + 1;
-                    	}
-                    	img.dispose();
-                        io.print("发现文件：",fullpath )
-                    }
-                    else{
-                        io.print("发现目录：",dir)
-                    }
-                } 
-            );
-    var preStr = "扫描 " + totalFileCount + " 张图片，边长为奇数的图片有 " + oddFileCount + " 张:" + '\r\n';
-	outStr = preStr + outStr;
-    mainForm.editOutPut.text = outStr;
 }
 
 
